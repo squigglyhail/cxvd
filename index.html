@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CXVD</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #050308;
+    --purple-deep: #1a0a2e;
+    --purple-mid: #2d1b4e;
+    --purple-soft: #4a2d7a;
+    --accent: #8b5cf6;
+    --accent-2: #a78bfa;
+    --fg: #e8e2f0;
+    --muted: #8b7fa8;
+    --muted-2: #5a4d72;
+    --border: rgba(139, 92, 246, 0.18);
+    --border-strong: rgba(139, 92, 246, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #cosmos {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .content { position: relative; z-index: 1; }
+  .display { font-family: 'Unbounded', sans-serif; }
+
+  /* Nav */
+  .topnav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    background: rgba(5, 3, 8, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-link {
+    position: relative;
+    color: var(--muted);
+    transition: color .3s ease;
+  }
+  .nav-link:hover { color: var(--fg); }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -6px;
+    width: 0; height: 1px;
+    background: var(--accent-2);
+    transition: width .3s ease;
+  }
+  .nav-link:hover::after { width: 100%; }
+
+  /* Profile frame */
+  .profile-frame {
+    position: relative;
+    width: 260px;
+    height: 260px;
+  }
+  .profile-upload {
+    display: block;
+    width: 100%; height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(45, 27, 78, 0.4), rgba(10, 5, 18, 0.6));
+    border: 1px solid var(--border-strong);
+  }
+  .profile-upload::before,
+  .profile-upload::after {
+    content: '';
+    position: absolute;
+    width: 22px; height: 22px;
+    border-color: var(--accent-2);
+    border-style: solid;
+    border-width: 0;
+  }
+  .profile-upload::before {
+    top: -1px; left: -1px;
+    border-top-width: 2px; border-left-width: 2px;
+  }
+  .profile-upload::after {
+    bottom: -1px; right: -1px;
+    border-bottom-width: 2px; border-right-width: 2px;
+  }
+  #avatar-preview {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Tags */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(139, 92, 246, 0.04);
+  }
+  .tag::before {
+    content: '';
+    width: 4px; height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* Section labels */
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-label::before {
+    content: '';
+    width: 36px; height: 1px;
+    background: var(--accent);
+  }
+
+  /* Game cards */
+  .game-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(45, 27, 78, 0.18), rgba(10, 5, 18, 0.5));
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: transform .4s cubic-bezier(.2,.7,.3,1), border-color .3s ease;
+  }
+  .game-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+  }
+  .game-cover {
+    aspect-ratio: 4 / 5;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(74, 45, 122, 0.18), rgba(26, 10, 46, 0.35));
+  }
+  .game-cover img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .game-index {
+    position: absolute;
+    top: 14px; left: 14px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    z-index: 2;
+    mix-blend-mode: difference;
+  }
+  .game-info { padding: 18px 20px 22px; }
+  .game-info h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin: 0 0 4px;
+    color: var(--fg);
+  }
+  .game-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Achievements */
+  .achievement-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 36px;
+    padding: 30px 0;
+    border-top: 1px solid var(--border);
+    position: relative;
+    transition: background .3s ease;
+  }
+  .achievement-row::before {
+    content: '';
+    position: absolute;
+    left: 110px; top: -1px;
+    width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, var(--border-strong), transparent);
+    transform: translateX(-18px);
+  }
+  .achievement-row:hover {
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.05), transparent 60%);
+  }
+  .achievement-row:last-child { border-bottom: 1px solid var(--border); }
+  .achievement-year {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 300;
+    font-size: 1.6rem;
+    color: var(--accent-2);
+    letter-spacing: 0.02em;
+    padding-top: 2px;
+  }
+  .achievement-content h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin: 0 0 10px;
+    color: var(--fg);
+  }
+  .achievement-content p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.3,1);
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--purple-mid); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--purple-soft); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .achievement-row { grid-template-columns: 1fr; gap: 8px; }
+    .achievement-row::before { display: none; }
+    .achievement-year { font-size: 1.15rem; }
+    .profile-frame { width: 200px; height: 200px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="cosmos"></canvas>
+
+<div class="content">
+
+  <!-- Top Nav -->
+  <header class="topnav">
+    <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#top" class="display font-black text-xl tracking-tight">CXVD</a>
+      <ul class="hidden md:flex gap-10 text-xs tracking-[0.2em] uppercase">
+        <li><a href="#profile" class="nav-link">Profile</a></li>
+        <li><a href="#games" class="nav-link">Games</a></li>
+        <li><a href="#achievements" class="nav-link">Achievements</a></li>
+      </ul>
+      <div class="text-xs text-[var(--muted)] tracking-[0.2em] uppercase hidden md:block">My Bio</div>
+    </nav>
+  </header>
+
+  <!-- Profile Section -->
+  <section id="top" class="min-h-screen flex items-center px-6 pt-28 pb-16">
+    <div class="max-w-6xl mx-auto w-full" id="profile">
+      <div class="grid md:grid-cols-[auto_1fr] gap-12 md:gap-16 items-center">
+        
+        <div class="profile-frame reveal">
+          <div class="profile-upload">
+            <!-- PUT YOUR PROFILE IMAGE NAME HERE -->
+            <img id="avatar-preview" alt="CXVD profile" src="profile.jpg">
+          </div>
+        </div>
+
+        <div class="reveal">
+          <div class="section-label">01 — Identity</div>
+          <h1 class="display font-black text-7xl md:text-[9rem] leading-none tracking-tighter mb-7">CXVD</h1>
+          <!-- PUT YOUR INTRO TEXT HERE -->
+          <p class="text-lg md:text-xl text-[var(--muted)] max-w-xl leading-relaxed mb-8">Aim, Schulte Player, Osu! Lover, VRT Trainer, Member of Takamagahara</p>
+          <div class="flex flex-wrap gap-2">
+            <!-- PUT YOUR TAGS HERE -->
+            <span class="tag">Aimstar</span>
+            <span class="tag">Amatsukami</span>
+            <span class="tag">Schultified</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Games Section -->
+  <section id="games" class="px-6 py-24">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-14 reveal">
+        <div class="section-label">02 — Selection</div>
+        <h2 class="display font-black text-5xl md:text-6xl tracking-tight">Games I Like</h2>
+        <p class="text-[var(--muted)] mt-4 max-w-md">Six titles that left a mark.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 reveal">
+        
+        <!-- Game 1 -->
+        <article class="game-card">
+          <div class="game-cover">
+            <span class="game-index">01</span>
+            <!-- PUT GAME 1 IMAGE NAME HERE -->
+            <img src="game1.jpg" alt="Game 1 cover">
+          </div>
+          <div class="game-info">
+            <h3>Kovaaks</h3>
+            <p>3D</p>
+          </div>
+        </article>
+
+        <!-- Game 2 -->
+        <article class="game-card">
+          <div class="game-cover">
+            <span class="game-index">02</span>
+            <!-- PUT GAME 2 IMAGE NAME HERE -->
+            <img src="game2.jpg" alt="Game 2 cover">
+          </div>
+          <div class="game-info">
+            <h3>Aim400kg</h3>
+            <p>2D</p>
+          </div>
+        </article>
+
+        <!-- Game 3 -->
+        <article class="game-card">
+          <div class="game-cover">
+            <span class="game-index">03</span>
+            <!-- PUT GAME 3 IMAGE NAME HERE -->
+            <img src="game3.jpg" alt="Game 3 cover">
+          </div>
+          <div class="game-info">
+            <h3>Osu!</h3>
+            <p>2D Rhythm</p>
+          </div>
+        </article>
+
+        <!-- Game 4 -->
+        <article class="game-card">
+          <div class="game-cover">
+            <span class="game-index">04</span>
+            <!-- PUT GAME 4 IMAGE NAME HERE -->
+            <img src="game4.jpg" alt="Game 4 cover">
+          </div>
+          <div class="game-info">
+            <h3>Ballsheet</h3>
+            <p>2D VRT</p>
+          </div>
+        </article>
+
+        <!-- Game 5 -->
+        <article class="game-card">
+          <div class="game-cover">
+            <span class="game-index">05</span>
+            <!-- PUT GAME 5 IMAGE NAME HERE -->
+            <img src="game5.jpg" alt="Game 5 cover">
+          </div>
+          <div class="game-info">
+            <h3>Schulte Table</h3>
+            <p>2D Peripheral</p>
+          </div>
+        </article>
+
+        <!-- Game 6 -->
+        <article class="game-card">
+          <div class="game-cover">
+            <span class="game-index">06</span>
+            <!-- PUT GAME 6 IMAGE NAME HERE -->
+            <img src="game6.jpg" alt="Game 6 cover">
+          </div>
+          <div class="game-info">
+            <h3>Aimbooster</h3>
+            <p>2D</p>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Achievements Section -->
+  <section id="achievements" class="px-6 py-24">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-14 reveal">
+        <div class="section-label">03 — Record</div>
+        <h2 class="display font-black text-5xl md:text-6xl tracking-tight">Top 3 Achievements</h2>
+        <p class="text-[var(--muted)] mt-4 max-w-md">A timeline of milestones.</p>
+      </div>
+      
+      <div class="reveal">
+        
+        <!-- Achievement 1 -->
+        <article class="achievement-row">
+          <div class="achievement-year">7/2/26</div>
+          <div class="achievement-content">
+            <h3>Schulte Reaction 4.512 (Top 3)</h3>
+            <p>This score is top 3 global (world record is 4.426)</p>
+          </div>
+        </article>
+
+        <!-- Achievement 2 -->
+        <article class="achievement-row">
+          <div class="achievement-year">6/21/26</div>
+          <div class="achievement-content">
+            <h3>Schulte Memory 6.664 WORLD RECORD</h3>
+            <p>The former world record is 6.98</p>
+          </div>
+        </article>
+
+        <!-- Achievement 3 -->
+        <article class="achievement-row">
+          <div class="achievement-year">6/9/26</div>
+          <div class="achievement-content">
+            <h3>Human Benchmark Aim Trainer 239ms</h3>
+            <p>Just insane</p>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="px-6 py-12 border-t border-[var(--border)] mt-12">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="display font-black text-lg">CXVD</div>
+      <div class="text-xs text-[var(--muted)] tracking-[0.2em] uppercase">Bio · 2026</div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ============ COSMIC BACKGROUND (non-glowing) ============
+const canvas = document.getElementById('cosmos');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0;
+let stars = [];
+let nebulae = [];
+let shootingStars = [];
+let mouseX = 0, mouseY = 0;
+let targetMouseX = 0, targetMouseY = 0;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  initStars();
+  initNebulae();
+}
+
+function initStars() {
+  stars = [];
+  const area = W * H;
+  const layers = [
+    { count: Math.floor(area / 5500), speed: 0.04, sMin: 0.3, sMax: 0.8 },
+    { count: Math.floor(area / 11000), speed: 0.10, sMin: 0.5, sMax: 1.4 },
+    { count: Math.floor(area / 26000), speed: 0.20, sMin: 0.9, sMax: 2.0 }
+  ];
+  layers.forEach((layer, li) => {
+    for (let i = 0; i < layer.count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: layer.sMin + Math.random() * (layer.sMax - layer.sMin),
+        speed: layer.speed,
+        layer: li,
+        isPurple: Math.random() < 0.28,
+        alpha: 0.4 + Math.random() * 0.6,
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.005 + Math.random() * 0.02
+      });
+    }
+  });
+}
+
+function initNebulae() {
+  nebulae = [];
+  for (let i = 0; i < 5; i++) {
+    nebulae.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      radius: 220 + Math.random() * 320,
+      hue: Math.random() < 0.6 ? [139, 92, 246] : [74, 45, 122],
+      alpha: 0.035 + Math.random() * 0.055,
+      vx: (Math.random() - 0.5) * 0.06,
+      vy: (Math.random() - 0.5) * 0.06
+    });
+  }
+}
+
+function spawnShootingStar() {
+  if (!reducedMotion && Math.random() < 0.0025 && shootingStars.length < 2) {
+    const fromLeft = Math.random() < 0.5;
+    shootingStars.push({
+      x: fromLeft ? -50 : W + 50,
+      y: Math.random() * H * 0.6,
+      vx: (fromLeft ? 1 : -1) * (4 + Math.random() * 3),
+      vy: 1 + Math.random() * 1.2,
+      life: 1,
+      length: 60 + Math.random() * 50
+    });
+  }
+}
+
+function draw() {
+  // Base
+  ctx.fillStyle = '#050308';
+  ctx.fillRect(0, 0, W, H);
+
+  // Smooth mouse interpolation
+  mouseX += (targetMouseX - mouseX) * 0.04;
+  mouseY += (targetMouseY - mouseY) * 0.04;
+
+  // Nebulae - soft color washes, no glow filter
+  for (const n of nebulae) {
+    n.x += n.vx;
+    n.y += n.vy;
+    if (n.x < -n.radius) n.x = W + n.radius;
+    if (n.x > W + n.radius) n.x = -n.radius;
+    if (n.y < -n.radius) n.y = H + n.radius;
+    if (n.y > H + n.radius) n.y = -n.radius;
+
+    const r = Math.max(1, n.radius);
+    const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r);
+    grad.addColorStop(0, `rgba(${n.hue[0]}, ${n.hue[1]}, ${n.hue[2]}, ${n.alpha})`);
+    grad.addColorStop(1, `rgba(${n.hue[0]}, ${n.hue[1]}, ${n.hue[2]}, 0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Stars - crisp solid points, no halos
+  for (const s of stars) {
+    s.twinkle += s.twinkleSpeed;
+    const twinkleAlpha = s.alpha * (0.6 + 0.4 * Math.sin(s.twinkle));
+
+    const parallaxX = mouseX * (s.layer + 1) * 6;
+    const parallaxY = mouseY * (s.layer + 1) * 6;
+
+    s.x -= s.speed;
+    if (s.x < -5) s.x = W + 5;
+
+    const drawX = s.x + parallaxX;
+    const drawY = s.y + parallaxY;
+
+    ctx.fillStyle = s.isPurple
+      ? `rgba(167, 139, 250, ${twinkleAlpha})`
+      : `rgba(232, 226, 240, ${twinkleAlpha})`;
+    ctx.beginPath();
+    ctx.arc(drawX, drawY, Math.max(0.1, s.size), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Shooting stars - thin streaks, no bloom
+  spawnShootingStar();
+  shootingStars = shootingStars.filter(ss => {
+    ss.x += ss.vx;
+    ss.y += ss.vy;
+    ss.life -= 0.008;
+
+    if (ss.life > 0 && ss.x > -150 && ss.x < W + 150) {
+      const tailX = ss.x - ss.vx * ss.length / 5;
+      const tailY = ss.y - ss.vy * ss.length / 5;
+      const grad = ctx.createLinearGradient(ss.x, ss.y, tailX, tailY);
+      grad.addColorStop(0, `rgba(232, 226, 240, ${ss.life * 0.9})`);
+      grad.addColorStop(1, 'rgba(232, 226, 240, 0)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(ss.x, ss.y);
+      ctx.lineTo(tailX, tailY);
+      ctx.stroke();
+      return true;
+    }
+    return false;
+  });
+
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('mousemove', e => {
+  targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+window.addEventListener('resize', resize);
+resize();
+draw();
+
+// ============ REVEAL ON SCROLL ============
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
